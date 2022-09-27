@@ -40,18 +40,22 @@ func savePerson(c echo.Context) error {
 func updatePersonName(c echo.Context) error {
 	var personPointer *Person
 	var newPerson Person
+	var index int
 	name := c.Param("name")
-	for _, p := range people {
+	for i, p := range people {
 		if p.Name == name {
 			personPointer = &p
+			index = i
 		}
 	}
 	if personPointer == nil {
 		return c.JSON(http.StatusNotFound, "Person not found")
 	}
+	people = splice(people, index)
 	if err := c.Bind(&newPerson); err != nil {
 		return err
 	}
+	people = append(people, *newPerson)
 	(*personPointer).Name = newPerson.Name
 	return c.JSON(http.StatusOK, *personPointer)
 }
@@ -69,13 +73,13 @@ func deletePerson(c echo.Context) error {
 	if person == nil {
 		return c.JSON(http.StatusNotFound, "Person not found")
 	}
-	splice := func(slice []Person, index int) []Person {
-		return append(slice[:index], slice[index+1:]...)
-	}
 	people = splice(people, index)
 	return c.JSON(http.StatusOK, person)
 }
 
+func splice(slice []Person, index int) []Person {
+	return append(slice[:index], slice[index+1:]...)
+}
 func main() {
 	e := echo.New()
 	e.GET("/", func(c echo.Context) error {

@@ -30,31 +30,31 @@ func getPerson(c echo.Context) error {
 
 func savePerson(c echo.Context) error {
 	p := new(Person)
-	if err := c.Bind(p); err != nil {
+	if err := c.Bind(&p); err != nil {
 		return err
 	}
 	people = append(people, *p)
 	return c.JSON(http.StatusCreated, p)
 }
 
-//func updatePersonName(c echo.Context) error {
-//	var person *Person
-//	var newPerson Person
-//	name := c.Param("name")
-//	for _, p := range people {
-//		if p.Name == name {
-//			person = &p
-//		}
-//	}
-//	if person == nil {
-//		return c.JSON(http.StatusNotFound, "Person not found")
-//	}
-//	if err := c.Bind(newPerson); err != nil { //does not work
-//		return err
-//	}
-//	person.Name = newPerson.Name
-//	return c.JSON(http.StatusOK, person)
-//}
+func updatePersonName(c echo.Context) error {
+	var personPointer *Person
+	var newPerson Person
+	name := c.Param("name")
+	for _, p := range people {
+		if p.Name == name {
+			personPointer = &p
+		}
+	}
+	if personPointer == nil {
+		return c.JSON(http.StatusNotFound, "Person not found")
+	}
+	if err := c.Bind(&newPerson); err != nil {
+		return err
+	}
+	(*personPointer).Name = newPerson.Name
+	return c.JSON(http.StatusOK, *personPointer)
+}
 
 func deletePerson(c echo.Context) error {
 	var person *Person
@@ -84,7 +84,7 @@ func main() {
 	e.GET("/users/:name", getPerson)
 	e.GET("/users", getPeople)
 	e.POST("/users", savePerson)
-	//e.PUT("/users/:name", updatePersonName)
+	e.PUT("/users/:name", updatePersonName)
 	e.DELETE("/users/:name", deletePerson)
 	e.Logger.Fatal(e.Start(":1323"))
 }

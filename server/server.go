@@ -25,7 +25,7 @@ func getPerson(c echo.Context) error {
 			return c.JSON(http.StatusOK, p)
 		}
 	}
-	return echo.ErrBadRequest
+	return c.JSON(http.StatusNotFound, "Person not found")
 }
 
 func savePerson(c echo.Context) error {
@@ -37,6 +37,45 @@ func savePerson(c echo.Context) error {
 	return c.JSON(http.StatusCreated, p)
 }
 
+//func updatePersonName(c echo.Context) error {
+//	var person *Person
+//	var newPerson Person
+//	name := c.Param("name")
+//	for _, p := range people {
+//		if p.Name == name {
+//			person = &p
+//		}
+//	}
+//	if person == nil {
+//		return c.JSON(http.StatusNotFound, "Person not found")
+//	}
+//	if err := c.Bind(newPerson); err != nil { //does not work
+//		return err
+//	}
+//	person.Name = newPerson.Name
+//	return c.JSON(http.StatusOK, person)
+//}
+
+func deletePerson(c echo.Context) error {
+	var person *Person
+	var index int
+	name := c.Param("name")
+	for i, p := range people {
+		if p.Name == name {
+			person = &p
+			index = i
+		}
+	}
+	if person == nil {
+		return c.JSON(http.StatusNotFound, "Person not found")
+	}
+	splice := func(slice []Person, index int) []Person {
+		return append(slice[:index], slice[index+1:]...)
+	}
+	people = splice(people, index)
+	return c.JSON(http.StatusOK, person)
+}
+
 func main() {
 	e := echo.New()
 	e.GET("/", func(c echo.Context) error {
@@ -46,6 +85,6 @@ func main() {
 	e.GET("/users", getPeople)
 	e.POST("/users", savePerson)
 	//e.PUT("/users/:name", updatePersonName)
-	//e.DELETE("/users/:name", deletePerson)
+	e.DELETE("/users/:name", deletePerson)
 	e.Logger.Fatal(e.Start(":1323"))
 }

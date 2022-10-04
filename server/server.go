@@ -1,18 +1,21 @@
 package server
 
 import (
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/mchappyneil/people-service/models"
 	"net/http"
 )
 
-const ErrNotFound = fmt.Errorf("we aint found shit")
+// const PersonNotFound = "Error - person not found: "
 
 var people = []models.Person{
 	{Name: "John Doe", Address: "123 Foo Street"},
 	{Name: "Neil Mehta", Address: "321 Bar Avenue"},
 }
+
+//func createError(errorString string, name string) error {
+//	return fmt.Errorf("%s%q", errorString, name)
+//}
 
 func GetPeople(c echo.Context) error {
 	return c.JSON(http.StatusOK, people)
@@ -30,7 +33,11 @@ func GetPerson(c echo.Context) error {
 
 func SavePerson(c echo.Context) error {
 	p := new(models.Person)
+	c.Echo().Validator = &models.PersonValidator{Validator: models.V}
 	if err := c.Bind(&p); err != nil {
+		return err
+	}
+	if err := c.Validate(p); err != nil {
 		return err
 	}
 	people = append(people, *p)
@@ -39,13 +46,17 @@ func SavePerson(c echo.Context) error {
 
 func UpdatePersonAddress(c echo.Context) error {
 	var newPerson models.Person
+	c.Echo().Validator = &models.PersonValidator{Validator: models.V}
 	if err := c.Bind(&newPerson); err != nil {
 		return err
 	}
 	// Validate data
 	// Validate name not empty
+	if err := c.Validate(newPerson); err != nil {
+		return err
+	}
 
-	// Pass to PersonService
+	// Pass '?' to PersonService
 
 	// Manipulate data into expected response
 

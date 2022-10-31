@@ -16,5 +16,5 @@ func main() {
 	e.POST("/users", server.SavePerson)
 	e.PUT("/users/:name", server.UpdatePersonAddress)
 	e.DELETE("/users/:name", server.DeletePerson)
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start(":1324"))
 }

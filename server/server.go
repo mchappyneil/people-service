@@ -1,9 +1,11 @@
 package server
 
 import (
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/mchappyneil/people-service/models"
 	"net/http"
+	"net/url"
 )
 
 // const PersonNotFound = "Error - person not found: "
@@ -11,6 +13,15 @@ import (
 var people = []models.Person{
 	{Name: "John Doe", Address: "123 Foo Street"},
 	{Name: "Neil Mehta", Address: "321 Bar Avenue"},
+}
+
+type Links struct {
+	Self string `json:"self"`
+}
+
+type JSONAPIResponse struct {
+	Links `json:"links"`
+	Data  interface{} `json:"data"`
 }
 
 //func createError(errorString string, name string) error {
@@ -25,7 +36,16 @@ func GetPerson(c echo.Context) error {
 	name := c.Param("name")
 	for _, p := range people {
 		if p.Name == name {
-			return c.JSON(http.StatusOK, p)
+			t := &url.URL{Path: p.Name}
+			encodedName := t.String()
+			response := JSONAPIResponse{
+				Data: p,
+				Links: Links{
+					//Figure out how to escape for a URL as in space becomes %20 - DONE
+					Self: fmt.Sprintf("localhost:1324/%s", encodedName),
+				},
+			}
+			return c.JSON(http.StatusOK, response)
 		}
 	}
 	return c.JSON(http.StatusNotFound, "Person not found")
@@ -56,9 +76,9 @@ func UpdatePersonAddress(c echo.Context) error {
 		return err
 	}
 
-	// Pass '?' to PersonService
+	// Pass to PersonService
 
-	// Manipulate data into expected response
+	// Manipulate data into JSON API response
 
 	// Technically GetUser
 	index := -1
@@ -76,9 +96,9 @@ func UpdatePersonAddress(c echo.Context) error {
 
 	// Technically UpdateUser
 	people[index] = newPerson
-	////
 
-	return c.JSON(http.StatusOK, newPerson)
+	////
+	return c.JSON(http.StatusOK, JSONAPIResponse{Data: newPerson})
 }
 
 func DeletePerson(c echo.Context) error {
